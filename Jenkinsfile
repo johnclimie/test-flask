@@ -13,6 +13,15 @@ pipeline {
       }
     }
 
+    stage('Verify AWS Identity') {
+      steps {
+        withAWS(region: "${env.AWS_REGION}", credentials: 'aws-creds') {
+          bat 'aws sts get-caller-identity'
+        }
+      }
+    }
+
+
     stage('Login to ECR') {
       steps {
         withAWS(region: "${env.AWS_REGION}", credentials: 'aws-creds') {
