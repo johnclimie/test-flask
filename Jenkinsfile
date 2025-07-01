@@ -16,29 +16,29 @@ pipeline {
     stage('Verify AWS Identity') {
       steps {
         withAWS(region: "${env.AWS_REGION}", credentials: 'aws-creds') {
-          bat 'aws sts get-caller-identity'
-        }
-      }
-    }
-
-
-    stage('Login to ECR') {
-      steps {
-        withAWS(region: "${env.AWS_REGION}", credentials: 'aws-creds') {
-          powershell '''
-            aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 451947743265.dkr.ecr.us-east-2.amazonaws.com
+          bat '''
+            aws sts get-caller-identity > nul
           '''
         }
       }
     }
 
-
+    stage('Login to ECR') {
+      steps {
+        withAWS(region: "${env.AWS_REGION}", credentials: 'aws-creds') {
+          bat '''
+            aws ecr get-login-password --region us-east-2 > pass.txt
+            type pass.txt | docker login --username AWS --password-stdin 451947743265.dkr.ecr.us-east-2.amazonaws.com
+          '''
+        }
+      }
+    }
 
     stage('Build Docker Image') {
       steps {
         powershell '''
-        docker build -t $env:IMAGE_NAME:$env:IMAGE_TAG .
-        docker tag $env:IMAGE_NAME:$env:IMAGE_TAG 451947743265.dkr.ecr.us-east-2.amazonaws.com/$env:REPO_NAME:$env:IMAGE_TAG
+          docker build -t $env:IMAGE_NAME:$env:IMAGE_TAG .
+          docker tag $env:IMAGE_NAME:$env:IMAGE_TAG 451947743265.dkr.ecr.us-east-2.amazonaws.com/$env:REPO_NAME:$env:IMAGE_TAG
         '''
       }
     }
@@ -46,7 +46,7 @@ pipeline {
     stage('Push to ECR') {
       steps {
         powershell '''
-        docker push 451947743265.dkr.ecr.us-east-2.amazonaws.com/$env:REPO_NAME:$env:IMAGE_TAG
+          docker push 451947743265.dkr.ecr.us-east-2.amazonaws.com/$env:REPO_NAME:$env:IMAGE_TAG
         '''
       }
     }
