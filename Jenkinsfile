@@ -6,7 +6,7 @@ pipeline{
   stages{
     stage('Checkout git'){
       steps{
-        git branch: 'main', url: 'https://github.com/Parth2k3/test-flask'
+        git branch: 'main', url: 'https://github.com/johnclimie/test-flask'
       }
     }
     stage('set up the venv'){
