@@ -25,7 +25,7 @@ pipeline{
               powershell '''
               $ecrLogin = aws ecr get-login-password --region $env.AWS_REGION
 
-              docker login --username AWS --password $ecrLogin https://451947743265.dkr.ecr.us-east-2.amazonaws.com
+              docker login --username AWS --password-stdin $ecrLogin https://451947743265.dkr.ecr.us-east-2.amazonaws.com
               '''
             }
           }
