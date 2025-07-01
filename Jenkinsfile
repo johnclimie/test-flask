@@ -17,7 +17,8 @@ pipeline {
       steps {
         withAWS(region: "${env.AWS_REGION}", credentials: 'aws-creds') {
           bat '''
-            aws sts get-caller-identity > nul
+            aws sts get-caller-identity > identity.json
+            echo Verified AWS identity.
           '''
         }
       }
@@ -26,9 +27,8 @@ pipeline {
     stage('Login to ECR') {
       steps {
         withAWS(region: "${env.AWS_REGION}", credentials: 'aws-creds') {
-          bat '''
-            aws ecr get-login-password --region us-east-2 > pass.txt
-            type pass.txt | docker login --username AWS --password-stdin 451947743265.dkr.ecr.us-east-2.amazonaws.com
+          powershell '''
+            aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 451947743265.dkr.ecr.us-east-2.amazonaws.com
           '''
         }
       }
