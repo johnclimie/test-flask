@@ -1,47 +1,41 @@
-pipeline{
+pipeline {
   agent any
-  environment{
+  environment {
     AWS_REGION = 'us-east-2'
     IMAGE_NAME = 'test-flask'
     REPO_NAME = 'test'
     IMAGE_TAG = 'latest'
   }
-  stages{
-    stage('checkout'){
-      steps{
-        git branch:'main', url: 'https://github.com/johnclimie/test-flask'
+  stages {
+    stage('Checkout') {
+      steps {
+        git branch: 'main', url: 'https://github.com/johnclimie/test-flask'
       }
     }
-    stage('Tag the image'){
-      steps{
-        script{
-          IMAGE_TAG = 'latest'
+
+    stage('Login to ECR') {
+      steps {
+        withAWS(region: "${env.AWS_REGION}", credentials: 'aws-creds') {
+          powershell '''
+          aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 451947743265.dkr.ecr.us-east-2.amazonaws.com
+          '''
         }
       }
     }
-    stage('Login to ECR'){
-          steps{
-            withAWS(region: "${env.AWS_REGION}", credentials: 'aws-creds'){
-              powershell '''
-              $ecrLogin = aws ecr get-login-password --region $env.AWS_REGION
 
-              docker login --username AWS --password-stdin $ecrLogin https://451947743265.dkr.ecr.us-east-2.amazonaws.com
-              '''
-            }
-          }
-    }
     stage('Build Docker Image') {
-      steps{
+      steps {
         powershell '''
-        docker build -t $env.IMAGE_NAME:$env.IMAGE_TAG .
-        docker tag 451947743265.dkr.ecr.us-east-2.amazonaws.com/test:latest
+        docker build -t $env:IMAGE_NAME:$env:IMAGE_TAG .
+        docker tag $env:IMAGE_NAME:$env:IMAGE_TAG 451947743265.dkr.ecr.us-east-2.amazonaws.com/$env:REPO_NAME:$env:IMAGE_TAG
         '''
       }
     }
-    stage('PUsh to ECR'){
-      steps{
+
+    stage('Push to ECR') {
+      steps {
         powershell '''
-        docker push 451947743265.dkr.ecr.us-east-2.amazonaws.com/test:latest
+        docker push 451947743265.dkr.ecr.us-east-2.amazonaws.com/$env:REPO_NAME:$env:IMAGE_TAG
         '''
       }
     }
