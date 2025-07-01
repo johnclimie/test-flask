@@ -1,53 +1,24 @@
-pipeline {
+pipeline{
   agent any
-  environment {
-    AWS_REGION = 'us-east-2'
-    IMAGE_NAME = 'test-flask'
-    REPO_NAME = 'test'
-    IMAGE_TAG = 'latest'
+  environment{
+    VENV = 'venv'
   }
-  stages {
-    stage('Checkout') {
-      steps {
-        git branch: 'main', url: 'https://github.com/johnclimie/test-flask'
+  stages{
+    stage('Checkout git'){
+      steps{
+        git branch: 'main', url: 'https://github.com/Parth2k3/test-flask'
       }
     }
-
-    stage('Verify AWS Identity') {
-      steps {
-        withAWS(region: "${env.AWS_REGION}", credentials: 'aws-creds') {
-          bat '''
-            aws sts get-caller-identity > identity.json
-            echo Verified AWS identity.
-          '''
-        }
+    stage('set up the venv'){
+      steps{
+        bat 'python -m venv %VENV%'
+        bat '%VENV%\\Scripts\\python -m pip install --upgrade pip'
+        bat '%VENV%\\Scripts\\pip install -r requirements.txt'
       }
     }
-
-    stage('Login to ECR') {
-      steps {
-        withAWS(region: "${env.AWS_REGION}", credentials: 'aws-creds') {
-          powershell '''
-            aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 451947743265.dkr.ecr.us-east-2.amazonaws.com
-          '''
-        }
-      }
-    }
-
-    stage('Build Docker Image') {
-      steps {
-        powershell '''
-          docker build -t $env:IMAGE_NAME:$env:IMAGE_TAG .
-          docker tag $env:IMAGE_NAME:$env:IMAGE_TAG 451947743265.dkr.ecr.us-east-2.amazonaws.com/$env:REPO_NAME:$env:IMAGE_TAG
-        '''
-      }
-    }
-
-    stage('Push to ECR') {
-      steps {
-        powershell '''
-          docker push 451947743265.dkr.ecr.us-east-2.amazonaws.com/$env:REPO_NAME:$env:IMAGE_TAG
-        '''
+    stage('RUN THE TESTS'){
+      steps{
+        bat '%VENV%\\Scripts\\python -m unittest discover -s tests'
       }
     }
   }
