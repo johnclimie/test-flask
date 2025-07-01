@@ -4,11 +4,12 @@ pipeline{
     AWS_REGION = 'us-east-2'
     IMAGE_NAME = 'test-flask'
     REPO_NAME = 'test'
+    IMAGE_TAG = 'latest'
   }
   stages{
     stage('checkout'){
       steps{
-        git: 'https://github.com/johnclimie/test-flask'
+        git branch:'main', url: 'https://github.com/johnclimie/test-flask'
       }
     }
     stage('Tag the image'){
